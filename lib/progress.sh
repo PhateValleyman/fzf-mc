@@ -10,17 +10,14 @@ progress::done() {
     printf '%s\n' "Done"
 }
 
-# Get file size in bytes
 progress::size() {
     stat -c '%s' "$1" 2>/dev/null || stat -f '%z' "$1" 2>/dev/null || echo 0
 }
 
-# Calculate directory size recursively
 progress::dir_size() {
     du -sb "$1" 2>/dev/null | awk '{print $1}' || echo 0
 }
 
-# Copy a single file with pv when available
 progress::copy_file() {
     local src="$1"
     local dst="$2"
@@ -34,7 +31,6 @@ progress::copy_file() {
     fi
 }
 
-# Copy files or directories recursively with progress support
 progress::copy() {
     local src="$1"
     local dst="$2"
@@ -64,9 +60,28 @@ progress::copy() {
                 printf 'Progress: %s/%s bytes\n' "$copied" "$total"
             fi
         done < <(find "$src" -type f -print0)
-
         return
     fi
 
     cp -a -- "$src" "$dst"
+}
+
+# Start copy operation in background and return PID
+progress::copy_async() {
+    local src="$1"
+    local dst="$2"
+
+    (
+        progress::start "Background copy: $src -> $dst"
+        progress::copy "$src" "$dst"
+        progress::done
+    ) &
+
+    printf '%s\n' "$!"
+}
+
+# Wait for background copy PID
+progress::wait() {
+    local pid="$1"
+    wait "$pid"
 }
