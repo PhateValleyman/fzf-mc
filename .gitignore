@@ -1,0 +1,15 @@
+# fzf-mc — runtime data, které nepatří do repozitáře
+
+database/*.db
+data/history
+data/bookmarks
+data/trash/
+data/history.log
+
+# lokální konfigurace s citlivými údaji (SSH profily s reálnými IP/hesly)
+profiles/*.local.conf
+
+# editor/OS smetí
+*.swp
+*.bak
+.DS_Store
