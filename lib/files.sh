@@ -17,7 +17,7 @@ files::copy() {
 
     utils::confirm "Kopírovat '$src' do '$dst_dir'?" || return 1
 
-    files::_dispatch copy "$src" "$dst_dir"
+    files::_dispatch copy "$src" "$dst_dir" || return 1
     database::add_operation "copy" "$src" "$dst_dir"
     utils::log INFO "copy: $src -> $dst_dir"
 }
@@ -28,7 +28,7 @@ files::move() {
 
     utils::confirm "Přesunout '$src' do '$dst_dir'?" || return 1
 
-    files::_dispatch move "$src" "$dst_dir"
+    files::_dispatch move "$src" "$dst_dir" || return 1
     database::add_operation "move" "$src" "$dst_dir"
     utils::log INFO "move: $src -> $dst_dir"
 }
@@ -42,7 +42,7 @@ files::delete_prompt() {
         files::_trash "$target"
     else
         utils::confirm "TRVALE smazat '$target'? Tuto akci nelze vrátit zpět." || return 1
-        files::_dispatch delete "$target" ""
+        files::_dispatch delete "$target" "" || return 1
     fi
 
     database::add_operation "delete" "$target" ""
@@ -55,7 +55,7 @@ files::mkdir_prompt() {
     read -r -p "Název nového adresáře: " name
     [ -z "$name" ] && return
 
-    files::_dispatch mkdir "${base_dir%/}/$name" ""
+    files::_dispatch mkdir "${base_dir%/}/$name" "" || return 1
     database::add_operation "mkdir" "${base_dir%/}/$name" ""
 }
 
@@ -65,7 +65,7 @@ files::rename_prompt() {
     read -r -p "Nový název pro '$target': " new_name
     [ -z "$new_name" ] && return
 
-    files::_dispatch rename "$target" "$(dirname "$target")/$new_name"
+    files::_dispatch rename "$target" "$(dirname -- "$target")/$new_name" || return 1
     database::add_operation "rename" "$target" "$(dirname "$target")/$new_name"
 }
 
@@ -81,6 +81,7 @@ files::_dispatch() {
         local)  backends_local::"$action" "$src" "$dst" ;;
         ssh)    backends_ssh::"$action" "$src" "$dst" ;;
         rclone) backends_rclone::"$action" "$src" "$dst" ;;
+        *)      utils::log ERROR "Neznámý backend '$backend' pro akci '$action'"; return 1 ;;
     esac
 }
 

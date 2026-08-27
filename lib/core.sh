@@ -52,7 +52,7 @@ core::load_module() {
 }
 
 core::load_all_modules() {
-    local modules=(utils ui menu navigation preview files ssh rclone plugins database)
+    local modules=(utils local ui menu navigation preview files operations ssh rclone plugins database)
     local mod
     for mod in "${modules[@]}"; do
         core::load_module "$mod" || return 1
@@ -70,7 +70,7 @@ core::load_config() {
 
     # Výchozí hodnoty (pokud config.conf nedefinuje jinak)
     : "${LEFT_PATH:=$HOME}"
-    : "${RIGHT_PATH:=/sdcard}"
+    : "${RIGHT_PATH:=/tmp}"
     : "${EDITOR:=nano}"
     : "${PREVIEW:=cat}"
     : "${USE_TRASH:=true}"
@@ -82,6 +82,7 @@ core::load_config() {
 
 core::bootstrap() {
     core::check_dependencies || return 1
+    mkdir -p "$FZFMC_DATA"
     core::load_config
     core::load_all_modules || return 1
 

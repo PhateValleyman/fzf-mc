@@ -1,44 +1,28 @@
 #!/usr/bin/env bash
-# lib/operations.sh — high level file operations
+# lib/operations.sh — compatibility wrappers for high-level file operations
+# The backend-aware implementations live in files.sh.
 
 operations::copy() {
-    local src="$1" dst="$2"
-    local target="$dst/$(basename -- "$src")"
-
-    if [ -e "$target" ]; then
-        case "$(conflict_dialog "$src" "$target")" in
-            overwrite) rm -rf -- "$target" ;;
-            skip) return 0 ;;
-            rename) target="$(conflict_rename_target "$target")" ;;
-            cancel) return 1 ;;
-        esac
-    fi
-
-    progress::copy "$src" "$target"
+    files::copy "$@"
 }
 
 operations::copy_async() {
-    local src="$1" dst="$2"
-    local pid
-
-    pid="$(progress::copy_async "$src" "$dst")"
-    jobs::add "$pid" COPY "$src" "$dst"
-    printf 'Job started: %s\n' "$pid"
+    echo "Asynchronní kopírování zatím není podporováno pro všechny backendy." >&2
+    return 1
 }
 
 operations::move() {
-    local src="$1" dst="$2"
-    mv -- "$src" "$dst/$(basename -- "$src")"
+    files::move "$@"
 }
 
 operations::delete() {
-    confirm "Delete '$1'?" && rm -rf -- "$1"
+    files::delete_prompt "$@"
 }
 
 operations::mkdir() {
-    mkdir -p -- "$1"
+    files::_dispatch mkdir "$1" ""
 }
 
 operations::rename() {
-    mv -- "$1" "$2"
+    files::_dispatch rename "$1" "$2"
 }

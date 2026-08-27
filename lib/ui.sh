@@ -55,7 +55,7 @@ ui::fuzzy_pick() {
     local path selection
     path="$(ui::active_path)"
 
-    selection="$(ui::list_entries "local" "$path" | fzf \
+    selection="$(ui::list_entries "$(utils::backend_of "$path")" "$path" | fzf \
         --prompt="${UI_ACTIVE_PANEL}> " \
         --header="$(ui::header)" \
         --preview 'bash '"$FZFMC_LIB"'/../fzf-mc.sh --preview-helper {} 2>/dev/null || true' \
@@ -74,16 +74,16 @@ ui::handle_file_operation() {
 
     case "$operation" in
         f5)
-            operations::copy "$source" "$target"
+            files::copy "$source" "$target"
             ;;
         f6)
-            operations::move "$source" "$target"
+            files::move "$source" "$target"
             ;;
         f7)
-            operations::mkdir "$(ui::active_path)"
+            files::mkdir_prompt "$(ui::active_path)"
             ;;
         f8)
-            operations::delete "$source"
+            files::delete_prompt "$source"
             ;;
     esac
 }

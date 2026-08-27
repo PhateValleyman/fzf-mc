@@ -8,8 +8,12 @@
 
 backends_local::list() {
     local path="$1"
+    local entry
     printf '..\n'
-    ls -1ap "$path" 2>/dev/null | grep -v '^\./$'
+    while IFS= read -r entry; do
+        [ "$entry" = "." ] && continue
+        printf '%s/%s\n' "${path%/}" "$entry"
+    done < <(ls -1A -- "$path" 2>/dev/null)
 }
 
 backends_local::copy() {

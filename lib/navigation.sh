@@ -19,12 +19,18 @@ navigation::enter() {
 
 navigation::enter_local() {
     local entry="$1"
+    local current
+    current="$(ui::active_path)"
     if [ "$entry" = ".." ]; then
-        ui::set_active_path "$(dirname "$(ui::active_path)")"
-    elif [ -d "$entry" ]; then
-        ui::set_active_path "$entry"
-    elif [ -f "$entry" ]; then
-        files::edit "$entry"
+        ui::set_active_path "$(dirname -- "$current")"
+    else
+        entry="${entry#./}"
+        [ "${entry#/}" = "$entry" ] && entry="${current%/}/$entry"
+        if [ -d "$entry" ]; then
+            ui::set_active_path "$entry"
+        elif [ -f "$entry" ]; then
+            files::edit "$entry"
+        fi
     fi
 }
 
