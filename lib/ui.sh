@@ -25,6 +25,19 @@ ui::inactive_path() {
     [ "$UI_ACTIVE_PANEL" = "left" ] && echo "$UI_RIGHT_PATH" || echo "$UI_LEFT_PATH"
 }
 
+ui::set_active_path() {
+    local path="$1"
+    [ -z "$path" ] && return 1
+
+    if [ "$UI_ACTIVE_PANEL" = "left" ]; then
+        UI_LEFT_PATH="$path"
+        UI_LEFT_BACKEND="$(utils::backend_of "$path")"
+    else
+        UI_RIGHT_PATH="$path"
+        UI_RIGHT_BACKEND="$(utils::backend_of "$path")"
+    fi
+}
+
 ui::toggle_panel() {
     [ "$UI_ACTIVE_PANEL" = "left" ] && UI_ACTIVE_PANEL="right" || UI_ACTIVE_PANEL="left"
 }
@@ -61,7 +74,7 @@ ui::fuzzy_pick() {
         --preview 'bash '"$FZFMC_LIB"'/../fzf-mc.sh --preview-helper {} 2>/dev/null || true' \
         --preview-window=right:50%:wrap \
         --bind "tab:accept" \
-        --expect="enter,f3,f4,f5,f6,f7,f8,f9,f10")"
+        --expect="enter,tab,f3,f4,f5,f6,f7,f8,f9,f10")"
 
     printf '%s\n' "$selection"
 }
