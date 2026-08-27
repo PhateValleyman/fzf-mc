@@ -49,9 +49,12 @@ ui::header() {
     [ "$UI_ACTIVE_PANEL" = "left" ] && left_marker=">"
     [ "$UI_ACTIVE_PANEL" = "right" ] && right_marker=">"
 
-    printf '%s %-45s | %s %-45s\n' \
+    printf '%s LEFT  %-40s | %s RIGHT %-40s\n' \
         "$left_marker" "$UI_LEFT_PATH" \
         "$right_marker" "$UI_RIGHT_PATH"
+    printf '%-49s+%-49s\n' \
+        " backend: $UI_LEFT_BACKEND" " backend: $UI_RIGHT_BACKEND"
+    printf '%s\n' "F1 Help  F2 Menu  F3 View  F4 Edit  F5 Copy  F6 Move  F7 Mkdir  F8 Del  F10 Quit"
 }
 
 ui::list_entries() {
@@ -69,12 +72,16 @@ ui::fuzzy_pick() {
     path="$(ui::active_path)"
 
     selection="$(ui::list_entries "$(utils::backend_of "$path")" "$path" | fzf \
-        --prompt="${UI_ACTIVE_PANEL}> " \
+        --prompt="[${UI_ACTIVE_PANEL}]> " \
         --header="$(ui::header)" \
         --preview 'bash '"$FZFMC_LIB"'/../fzf-mc.sh --preview-helper {} 2>/dev/null || true' \
         --preview-window=right:50%:wrap \
-        --bind "tab:accept" \
-        --expect="enter,tab,f3,f4,f5,f6,f7,f8,f9,f10")"
+        --border=double \
+        --height=100% \
+        --layout=reverse \
+        --no-multi \
+        --bind "tab:accept,ctrl-c:abort" \
+        --expect="enter,tab,f1,f2,f3,f4,f5,f6,f7,f8,f9,f10")"
 
     printf '%s\n' "$selection"
 }
@@ -101,6 +108,33 @@ ui::handle_file_operation() {
     esac
 }
 
+ui::help() {
+    local help
+    help="$(cat <<'EOF'
+fzf-mc - ovladani ve stylu Midnight Commander
+
+Tab       prepnout aktivni panel
+Enter     otevrit adresar nebo soubor
+Backspace navrat do nadrizeneho adresare
+F1        tato napoveda
+F2 / F9   hlavni menu
+F3        nahled
+F4        upravit soubor
+F5        kopirovat do druheho panelu
+F6        presunout do druheho panelu
+F7        vytvorit adresar
+F8        smazat
+F10       konec
+EOF
+)"
+    if command -v less >/dev/null 2>&1; then
+        printf '%s\n' "$help" | less
+    else
+        printf '%s\n' "$help"
+        read -r -p "Stiskni Enter..." _
+    fi
+}
+
 ui::main_loop() {
     while [ "$UI_RUNNING" -eq 1 ]; do
         clear
@@ -115,10 +149,11 @@ ui::main_loop() {
         case "$key" in
             ""|enter) navigation::enter "$entry" ;;
             tab) ui::toggle_panel ;;
+            f1) ui::help ;;
+            f2|f9) menu::show ;;
             f3) preview::show "$entry" ;;
             f4) files::edit "$entry" ;;
             f5|f6|f7|f8) ui::handle_file_operation "$key" "$entry" ;;
-            f9) menu::show ;;
             f10) UI_RUNNING=0 ;;
         esac
     done

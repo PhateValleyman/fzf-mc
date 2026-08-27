@@ -61,6 +61,8 @@ pkg install fzf bat openssh rsync rclone sqlite
 
 | Klávesa   | Funkce         |
 |-----------|----------------|
+| F1        | nápověda       |
+| F2        | menu           |
 | Enter     | otevřít        |
 | Backspace | zpět           |
 | Tab       | změna panelu   |
