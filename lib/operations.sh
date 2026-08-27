@@ -4,9 +4,9 @@
 operations::copy() {
     local src="$1"
     local dst="$2"
+    local target="$dst/$(basename -- "$src")"
 
-    if [ -e "$dst/$(basename -- "$src")" ]; then
-        local target="$dst/$(basename -- "$src")"
+    if [ -e "$target" ]; then
         local action
         action="$(conflict_dialog "$src" "$target")"
 
@@ -18,7 +18,7 @@ operations::copy() {
                 return 0
                 ;;
             rename)
-                dst="$(dirname -- "$(conflict_rename_target "$target")")"
+                target="$(conflict_rename_target "$target")"
                 ;;
             cancel)
                 return 1
@@ -26,17 +26,23 @@ operations::copy() {
         esac
     fi
 
-    progress::start "Copy: $src -> $dst"
-    cp -a -- "$src" "$dst"
+    progress::start "Copy: $src -> $target"
+
+    if [ -f "$src" ]; then
+        progress::copy "$src" "$target"
+    else
+        cp -a -- "$src" "$target"
+    fi
+
     progress::done
 }
 
 operations::move() {
     local src="$1"
     local dst="$2"
+    local target="$dst/$(basename -- "$src")"
 
-    if [ -e "$dst/$(basename -- "$src")" ]; then
-        local target="$dst/$(basename -- "$src")"
+    if [ -e "$target" ]; then
         local action
         action="$(conflict_dialog "$src" "$target")"
 
@@ -48,7 +54,7 @@ operations::move() {
                 return 0
                 ;;
             rename)
-                dst="$(dirname -- "$(conflict_rename_target "$target")")"
+                target="$(conflict_rename_target "$target")"
                 ;;
             cancel)
                 return 1
@@ -56,8 +62,8 @@ operations::move() {
         esac
     fi
 
-    progress::start "Move: $src -> $dst"
-    mv -- "$src" "$dst"
+    progress::start "Move: $src -> $target"
+    mv -- "$src" "$target"
     progress::done
 }
 
