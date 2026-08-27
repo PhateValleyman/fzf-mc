@@ -2,76 +2,37 @@
 # lib/operations.sh — high level file operations
 
 operations::copy() {
-    local src="$1"
-    local dst="$2"
+    local src="$1" dst="$2"
     local target="$dst/$(basename -- "$src")"
 
     if [ -e "$target" ]; then
-        local action
-        action="$(conflict_dialog "$src" "$target")"
-
-        case "$action" in
-            overwrite)
-                rm -rf -- "$target"
-                ;;
-            skip)
-                return 0
-                ;;
-            rename)
-                target="$(conflict_rename_target "$target")"
-                ;;
-            cancel)
-                return 1
-                ;;
+        case "$(conflict_dialog "$src" "$target")" in
+            overwrite) rm -rf -- "$target" ;;
+            skip) return 0 ;;
+            rename) target="$(conflict_rename_target "$target")" ;;
+            cancel) return 1 ;;
         esac
     fi
 
-    progress::start "Copy: $src -> $target"
+    progress::copy "$src" "$target"
+}
 
-    if [ -f "$src" ]; then
-        progress::copy "$src" "$target"
-    else
-        cp -a -- "$src" "$target"
-    fi
+operations::copy_async() {
+    local src="$1" dst="$2"
+    local pid
 
-    progress::done
+    pid="$(progress::copy_async "$src" "$dst")"
+    jobs::add "$pid" COPY "$src" "$dst"
+    printf 'Job started: %s\n' "$pid"
 }
 
 operations::move() {
-    local src="$1"
-    local dst="$2"
-    local target="$dst/$(basename -- "$src")"
-
-    if [ -e "$target" ]; then
-        local action
-        action="$(conflict_dialog "$src" "$target")"
-
-        case "$action" in
-            overwrite)
-                rm -rf -- "$target"
-                ;;
-            skip)
-                return 0
-                ;;
-            rename)
-                target="$(conflict_rename_target "$target")"
-                ;;
-            cancel)
-                return 1
-                ;;
-        esac
-    fi
-
-    progress::start "Move: $src -> $target"
-    mv -- "$src" "$target"
-    progress::done
+    local src="$1" dst="$2"
+    mv -- "$src" "$dst/$(basename -- "$src")"
 }
 
 operations::delete() {
-    local target="$1"
-    if confirm "Delete '$target'?"; then
-        rm -rf -- "$target"
-    fi
+    confirm "Delete '$1'?" && rm -rf -- "$1"
 }
 
 operations::mkdir() {
